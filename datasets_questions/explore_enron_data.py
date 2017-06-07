@@ -32,7 +32,23 @@ print enron_data['FASTOW ANDREW S']['total_payments']
 
 count = 0
 for key, value in enron_data.iteritems():
-    if value['email_address'] != 'NaN':
+    if value['total_payments'] == 'NaN':
         count = count + 1
 
 print count
+
+count2 = 0
+for key, value in enron_data.iteritems():
+    if value['total_payments'] == 'NaN' and value['poi'] == 1:
+        count2 = count2 + 1
+
+print count2
+
+pois = 0
+for key, value in enron_data.iteritems():
+    if value['poi'] == 1:
+        pois = pois + 1
+
+print pois
+
+print len(enron_data)
