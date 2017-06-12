@@ -5,12 +5,14 @@
 """
 
 import pickle
-import numpy
-import matplotlib.pyplot as plt
+import numpy as np
 import sys
 
-from feature_format import featureFormat, targetFeatureSplit
+import matplotlib.pyplot as plt
+from sklearn import preprocessing
 from sklearn.cluster import KMeans
+
+from feature_format import featureFormat, targetFeatureSplit
 
 sys.path.append("../tools/")
 
@@ -44,17 +46,40 @@ data_dict.pop("TOTAL", 0)
 # can be any key in the person-level dictionary (salary, director_fees, etc.) 
 feature_1 = "salary"
 feature_2 = "exercised_stock_options"
-#feature_3 = "total_payments"
+# feature_3 = "total_payments"
 poi = "poi"
 features_list = [poi, feature_1, feature_2]
 data = featureFormat(data_dict, features_list)
 poi, finance_features = targetFeatureSplit(data)
+scaled_array = []
+salary_array = []
+stock_array = []
+for k, v in data_dict.items():
+    salary = 0.
+    exercised_stock_options = 0.
+    if v['salary'] != 'NaN':
+        salary = v['salary']
+    if v['exercised_stock_options'] != 'NaN':
+        exercised_stock_options = v['exercised_stock_options']
 
+    salary_array.append(salary)
+    stock_array.append(exercised_stock_options)
+
+salary_array.append(200000.)
+min_max_scaler = preprocessing.MinMaxScaler()
+sa_minmax = min_max_scaler.fit_transform(salary_array)
+print sa_minmax[len(sa_minmax) -1]
+stock_array.append(1000000.)
+st_minmax = min_max_scaler.fit_transform(stock_array)
+print st_minmax[len(st_minmax) -1]
+
+finance_features2 = []
+finance_features2 = zip(sa_minmax, st_minmax)
 # in the "clustering with 3 features" part of the mini-project,
 # you'll want to change this line to 
 # for f1, f2, _ in finance_features:
 # (as it's currently written, the line below assumes 2 features)
-for f1, f2 in finance_features:
+for f1, f2 in finance_features2:
     plt.scatter(f1, f2)
 plt.show()
 
@@ -62,12 +87,12 @@ plt.show()
 # for the data and store them to a list called pred
 kmeans = KMeans(n_clusters=2)
 
-pred = kmeans.fit_predict(finance_features)
+pred = kmeans.fit_predict(finance_features2)
 
 # rename the "name" parameter when you change the number of features
 # so that the figure gets saved to a different file
 try:
-    draw(pred, finance_features, poi, mark_poi=False, name="clusters.pdf", f1_name=feature_1, f2_name=feature_2)
+    draw(pred, finance_features2, poi, mark_poi=False, name="clusters.pdf", f1_name=feature_1, f2_name=feature_2)
 except NameError:
     print "no predictions object named pred found, no clusters to plot"
 
