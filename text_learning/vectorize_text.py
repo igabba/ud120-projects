@@ -45,14 +45,14 @@ for name, from_person in [("sara", from_sara), ("chris", from_chris)]:
 
         text = str(parseOutText(email))
         for rm in sw:
-            if(rm in text):
-                text = text.replace(rm,"")
+            if (rm in text):
+                text = text.replace(rm, "")
 
         word_data.append(text)
 
-        if name == "Sara":
+        if name == "sara":
             from_data.append(0)
-        if name == "Chris":
+        if name == "chris":
             from_data.append(1)
 
         email.close()
@@ -67,7 +67,7 @@ pickle.dump(from_data, open("your_email_authors.pkl", "w"))
 
 # in Part 4, do TfIdf vectorization here
 vectorizer = TfidfVectorizer(stop_words='english')
-vec_fit=vectorizer.fit_transform(word_data)
+vec_fit = vectorizer.fit_transform(word_data)
 
 print len(vectorizer.get_feature_names())
 vec_words = vectorizer.get_feature_names()
