@@ -40,10 +40,11 @@ labels_train = labels_train[:150]
 clf = DecisionTreeClassifier()
 clf.fit(features_train, labels_train)
 for counter, importance in enumerate(clf.feature_importances_):
-    if importance > 0.2:
-        print "Counter and importance ", counter, " - ", importance, " ", vectorizer.get_feature_names()[counter]
+    print "importance ", importance
+    #if importance > 0.2:
+        #print "Counter and importance ", counter, " - ", importance, " ", vectorizer.get_feature_names()[counter]
 
-print vectorizer.get_feature_names()[clf.feature_importances_.argmax()]
 
+# print vectorizer.get_feature_names()[clf.feature_importances_.argmax()]
 pred = clf.predict(features_test)
 print accuracy_score(pred, labels_test)
