@@ -12,8 +12,11 @@
 
 import pickle
 import sys
+from sklearn.tree import DecisionTreeClassifier
+from sklearn.metrics import accuracy_score
 sys.path.append("../tools/")
 from feature_format import featureFormat, targetFeatureSplit
+from sklearn.model_selection import train_test_split
 
 data_dict = pickle.load(open("../final_project/final_project_dataset.pkl", "r") )
 
@@ -27,6 +30,13 @@ labels, features = targetFeatureSplit(data)
 
 
 
-### it's all yours from here forward!  
+### it's all yours from here forward!
 
-
+X_train, X_test, y_train, y_test = train_test_split(features, labels, test_size=0.30, random_state=42)
+print data
+print features
+print labels
+clf = DecisionTreeClassifier()
+clf.fit(X_train, y_train)
+pred = clf.predict(X_test)
+print accuracy_score(pred, y_test)
