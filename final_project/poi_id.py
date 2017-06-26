@@ -3,8 +3,9 @@
 import pickle
 import sys
 
-from sklearn.ensemble import AdaBoostClassifier, RandomForestClassifier
+import pandas as pd
 from sklearn.discriminant_analysis import LinearDiscriminantAnalysis
+from sklearn.ensemble import AdaBoostClassifier, RandomForestClassifier
 from sklearn.linear_model import LogisticRegression
 from sklearn.metrics import make_scorer, f1_score, classification_report, confusion_matrix
 from sklearn.model_selection import train_test_split, GridSearchCV
@@ -12,6 +13,7 @@ from sklearn.naive_bayes import GaussianNB
 from sklearn.neighbors import KNeighborsClassifier
 from sklearn.neural_network import BernoulliRBM
 from sklearn.pipeline import Pipeline
+from sklearn.preprocessing import MinMaxScaler
 from sklearn.svm import LinearSVC
 from sklearn.tree import DecisionTreeClassifier
 
@@ -26,7 +28,7 @@ sys.path.append("../tools/")
 #  ['salary', 'deferral_payments', 'total_payments', 'loan_advances', 'bonus',
 # 'restricted_stock_deferred', 'deferred_income', 'total_stock_value', 'expenses',
 # 'exercised_stock_options', 'other', 'long_term_incentive', 'restricted_stock', 'director_fees']
-features_list = ['poi', 'bonus', 'poi_related_messages', 'from_messages_poi_ratio']  # You will need to use more features
+features_list = ['poi', 'bonus', 'from_messages_poi_ratio']  # You will need to use more features
 
 # Load the dictionary containing the dataset
 with open("final_project_dataset.pkl", "r") as data_file:
@@ -37,6 +39,7 @@ with open("final_project_dataset.pkl", "r") as data_file:
 data_dict.pop("TOTAL", 0)
 data_dict.pop("LOCKHART EUGENE E", 0)
 data_dict.pop("THE TRAVEL AGENCY IN THE PARK", 0)
+data_dict.pop("FREVERT MARK A", 0)
 
 
 # Task 3: Create new feature(s)
@@ -47,29 +50,24 @@ def add_features(original_data_dict):
     adds new features to de dictionary
     """
     for name in original_data_dict:
-        try:
-            if original_data_dict[name]["from_poi_to_this_person"] != 'NaN':
-                original_data_dict[name]['from_messages_poi_ratio'] = 1. * original_data_dict[name]["from_poi_to_this_person"] / original_data_dict[name][
-                    "from_messages"]
-            else:
-                original_data_dict[name]['from_messages_poi_ratio'] = 0
-
-            if original_data_dict[name]["from_this_person_to_poi"] != 'NaN':
-                original_data_dict[name]['person_to_poi_ratio'] = 1. * original_data_dict[name]["from_this_person_to_poi"] / original_data_dict[name][
-                    "to_messages"]
-            else:
-                original_data_dict[name]['person_to_poi_ratio'] = 0
-
-            poi_related_messages = original_data_dict[name]["from_poi_to_this_person"] + original_data_dict[name]["from_this_person_to_poi"] + \
-                                   original_data_dict[name]["shared_receipt_with_poi"]
-            if 'NaN' not in poi_related_messages:
-                original_data_dict[name]['poi_related_messages'] = poi_related_messages
-            else:
-                original_data_dict[name]['poi_related_messages'] = 0
-        except:
-            original_data_dict[name]['poi_related_messages'] = 0
+        if original_data_dict[name]["from_poi_to_this_person"] != 'NaN':
+            original_data_dict[name]['from_messages_poi_ratio'] = 1. * original_data_dict[name]["from_poi_to_this_person"] / original_data_dict[name][
+                "from_messages"]
+        else:
+            original_data_dict[name]['from_messages_poi_ratio'] = 0
 
     return original_data_dict
+
+
+def scale_features(original_data_dict):
+    df = pd.DataFrame(original_data_dict)
+    df = df.transpose()
+    # df = df[['poi', 'bonus', 'from_poi_to_this_person', 'from_this_person_to_poi', 'shared_receipt_with_poi']].copy()
+    print df.transpose().to_dict()
+    df.loc[:, 'bonus'][df['bonus'] == 'NaN'] = 0.00
+    scaler = MinMaxScaler()
+    df['bonus'] = pd.DataFrame(scaler.fit_transform(df['bonus']), columns=['bonus'])
+    return df.transpose().to_dict()
 
 
 def setup_clf_list():
@@ -173,6 +171,7 @@ def search_best_clf():
     return best_clf
 
 
+# data_dict = scale_features(data_dict)
 data_dict = add_features(data_dict)
 # Store to my_dataset for easy export below.
 my_dataset = data_dict

@@ -68,12 +68,11 @@ for k, v in data_dict.items():
 salary_array.append(200000.)
 min_max_scaler = preprocessing.MinMaxScaler()
 sa_minmax = min_max_scaler.fit_transform(salary_array)
-print sa_minmax[len(sa_minmax) -1]
+print sa_minmax[len(sa_minmax) - 1]
 stock_array.append(1000000.)
 st_minmax = min_max_scaler.fit_transform(stock_array)
-print st_minmax[len(st_minmax) -1]
+print st_minmax[len(st_minmax) - 1]
 
-finance_features2 = []
 finance_features2 = zip(sa_minmax, st_minmax)
 # in the "clustering with 3 features" part of the mini-project,
 # you'll want to change this line to 
