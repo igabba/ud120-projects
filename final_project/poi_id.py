@@ -3,17 +3,16 @@
 import pickle
 import sys
 
-import pandas as pd
+from pandas import DataFrame
 from sklearn.discriminant_analysis import LinearDiscriminantAnalysis
 from sklearn.ensemble import AdaBoostClassifier, RandomForestClassifier
 from sklearn.linear_model import LogisticRegression
-from sklearn.metrics import make_scorer, f1_score, classification_report, confusion_matrix
+from sklearn.metrics import make_scorer, f1_score, classification_report, confusion_matrix, recall_score
 from sklearn.model_selection import train_test_split, GridSearchCV
 from sklearn.naive_bayes import GaussianNB
 from sklearn.neighbors import KNeighborsClassifier
 from sklearn.neural_network import BernoulliRBM
 from sklearn.pipeline import Pipeline
-from sklearn.preprocessing import MinMaxScaler
 from sklearn.svm import LinearSVC
 from sklearn.tree import DecisionTreeClassifier
 
@@ -23,51 +22,48 @@ from tester import dump_classifier_and_data
 sys.path.append("../tools/")
 
 # Task 1: Select what features you'll use.
-# features_list is a list of strings, each of which is a feature name.
-# The first feature must be "poi".
-#  ['salary', 'deferral_payments', 'total_payments', 'loan_advances', 'bonus',
-# 'restricted_stock_deferred', 'deferred_income', 'total_stock_value', 'expenses',
-# 'exercised_stock_options', 'other', 'long_term_incentive', 'restricted_stock', 'director_fees']
-features_list = ['poi', 'bonus', 'from_messages_poi_ratio']  # You will need to use more features
+features_list = ['poi', 'bonus', 'from_messages_poi_ratio', 'deferred_ratio']
 
 # Load the dictionary containing the dataset
 with open("final_project_dataset.pkl", "r") as data_file:
     data_dict = pickle.load(data_file)
 
-# Task 2: Remove outliers
-# TODO buscar outliers
-data_dict.pop("TOTAL", 0)
-data_dict.pop("LOCKHART EUGENE E", 0)
-data_dict.pop("THE TRAVEL AGENCY IN THE PARK", 0)
-data_dict.pop("FREVERT MARK A", 0)
+
+def remove_outliers(df_to_modify, index_list):
+    # type: (DataFrame) -> df_to_modify
+    # type: (array) -> list
+    """
+    Removes any index given in the list
+    :param df_to_modify: Panda DataFrame to remove the index
+    :param index_list: the list containing the index to remove
+    :return: modified Panda DataFrame
+    """
+    print "length before outliers removal: ", len(df_to_modify)
+    df_to_modify.drop('email_address', axis=1, inplace=True)
+    df_to_modify.drop(index_list, inplace=True)
+    print "length after outliers removal: ", len(df_to_modify)
+    return df_to_modify
 
 
-# Task 3: Create new feature(s)
-# TODO crear la relacion entre los from-to
+def remove_zeros(df_to_modify):
+    # type: (DataFrame) -> df_to_modify
+    """
 
-def add_features(original_data_dict):
+    :param df_to_modify: Pandas DataFrame witch contains 'NaN'
+    :return: the Panda DataFrame with NaN replaced by 0 (zero)
+    """
+    df_to_modify = df_to_modify.replace('NaN', 0)
+    return df_to_modify
+
+
+def add_features(df_to_add_features):
     """
     adds new features to de dictionary
     """
-    for name in original_data_dict:
-        if original_data_dict[name]["from_poi_to_this_person"] != 'NaN':
-            original_data_dict[name]['from_messages_poi_ratio'] = 1. * original_data_dict[name]["from_poi_to_this_person"] / original_data_dict[name][
-                "from_messages"]
-        else:
-            original_data_dict[name]['from_messages_poi_ratio'] = 0
+    df_to_add_features['deferred_ratio'] = df_to_add_features['deferred_income'] / (df_to_add_features['total_payments'] + 1)
+    df_to_add_features['from_messages_poi_ratio'] = df_to_add_features['from_poi_to_this_person'] / (df_to_add_features['from_messages'] + 1)
 
-    return original_data_dict
-
-
-def scale_features(original_data_dict):
-    df = pd.DataFrame(original_data_dict)
-    df = df.transpose()
-    # df = df[['poi', 'bonus', 'from_poi_to_this_person', 'from_this_person_to_poi', 'shared_receipt_with_poi']].copy()
-    print df.transpose().to_dict()
-    df.loc[:, 'bonus'][df['bonus'] == 'NaN'] = 0.00
-    scaler = MinMaxScaler()
-    df['bonus'] = pd.DataFrame(scaler.fit_transform(df['bonus']), columns=['bonus'])
-    return df.transpose().to_dict()
+    return df_to_add_features
 
 
 def setup_clf_list():
@@ -144,7 +140,7 @@ def setup_clf_list():
     return clf_list
 
 
-def search_best_clf():
+def search_best_clf(my_dataset, features_list):
     # type: () -> GridSearchCV
     """
     Search for the best classifier and return it
@@ -153,11 +149,12 @@ def search_best_clf():
     f1score = 0
     best_clf = None
     for clftemp, params in setup_clf_list():
-        scorer = make_scorer(f1_score)
+        scorer = make_scorer(recall_score)
         clftemp = GridSearchCV(clftemp, params, scoring=scorer)
         clftemp = clftemp.fit(features_train, labels_train)
         pred = clftemp.predict(features_test)
-        f1_score_temp = f1_score(labels_test, pred)
+        f1_score_temp = recall_score(labels_test, pred)
+        test_classifier(clftemp.best_estimator_, my_dataset, features_list, folds=1000)
         if f1_score_temp > f1score:
             f1score = f1_score_temp
             best_clf = clftemp.best_estimator_
@@ -171,10 +168,19 @@ def search_best_clf():
     return best_clf
 
 
-# data_dict = scale_features(data_dict)
-data_dict = add_features(data_dict)
+# Creates a Panda's DataFrame to manipulate the data
+df = DataFrame(data_dict).transpose()
+
+# Task 2: Remove outliers
+df = remove_outliers(df, ['TOTAL', "LOCKHART EUGENE E", "THE TRAVEL AGENCY IN THE PARK", "FREVERT MARK A"])
+df = remove_zeros(df)
+df = df.astype(float)
+
+print df['bonus'].describe()
+# Task 3: Create new feature(s)
+df = add_features(df)
 # Store to my_dataset for easy export below.
-my_dataset = data_dict
+my_dataset = df.transpose().to_dict()
 
 # Extract features and labels from dataset for local testing
 data = featureFormat(my_dataset, features_list, sort_keys=True)
@@ -207,6 +213,6 @@ features_train, features_test, labels_train, labels_test = \
 # generates the necessary .pkl files for validating your results.
 from tester import test_classifier
 
-clf = search_best_clf()
+clf = search_best_clf(my_dataset, features_list)
 dump_classifier_and_data(clf, my_dataset, features_list)
 test_classifier(clf, my_dataset, features_list)
