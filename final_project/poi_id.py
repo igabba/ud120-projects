@@ -181,7 +181,7 @@ print df['bonus'].describe()
 df = add_features(df)
 # Store to my_dataset for easy export below.
 my_dataset = df.transpose().to_dict()
-
+print (my_dataset)
 # Extract features and labels from dataset for local testing
 data = featureFormat(my_dataset, features_list, sort_keys=True)
 labels, features = targetFeatureSplit(data)
