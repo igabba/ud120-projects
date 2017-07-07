@@ -61,7 +61,8 @@ def add_features(df_to_add_features):
     adds new features to de dictionary
     """
     df_to_add_features['deferred_ratio'] = df_to_add_features['deferred_income'] / (df_to_add_features['total_payments'] + 1)
-    df_to_add_features['from_messages_poi_ratio'] = df_to_add_features['from_poi_to_this_person'] / (df_to_add_features['from_messages'] + 1)
+    df_to_add_features['from_messages_poi_ratio'] = df_to_add_features['from_poi_to_this_person'] \
+                                                    / (df_to_add_features['from_messages'] + 1)
 
     return df_to_add_features
 
