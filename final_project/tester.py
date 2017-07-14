@@ -18,8 +18,8 @@ sys.path.append("../tools/")
 from feature_format import featureFormat, targetFeatureSplit
 
 PERF_FORMAT_STRING = "\
-\tAccuracy: {:>0.{display_precision}f}\tPrecision: {:>0.{display_precision}f}\t\
-Recall: {:>0.{display_precision}f}\tF1: {:>0.{display_precision}f}\tF2: {:>0.{display_precision}f}"
+\tA: {:>0.{display_precision}f} P: {:>0.{display_precision}f}\
+R: {:>0.{display_precision}f} F1: {:>0.{display_precision}f} F2: {:>0.{display_precision}f}"
 RESULTS_FORMAT_STRING = "\tTotal predictions: {:4d}\tTrue positives: {:4d}\tFalse positives: {:4d}\
 \tFalse negatives: {:4d}\tTrue negatives: {:4d}"
 
