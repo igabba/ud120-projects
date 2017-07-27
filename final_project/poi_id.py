@@ -15,6 +15,7 @@ from sklearn.neural_network import BernoulliRBM
 from sklearn.pipeline import Pipeline
 from sklearn.svm import LinearSVC
 from sklearn.tree import DecisionTreeClassifier
+import seaborn as sns
 
 from feature_format import featureFormat, targetFeatureSplit
 from tester import dump_classifier_and_data
